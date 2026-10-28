@@ -22,14 +22,19 @@ dev = [
     "httpx>=0.27",
     "ruff>=0.6",
     "pyyaml>=6",
+    "chromadb>=1.5",
+    "mcp>=2.3,<3",
+]
+kb = [
+    "sentence-transformers>=6",
 ]
 
 [tool.setuptools.packages.find]
-include = ["app*"]
+include = ["app*", "kb*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers --cov=app --cov-branch --cov-report=term-missing --cov-fail-under=90"
+addopts = "--strict-markers --cov=app --cov=kb --cov-branch --cov-report=term-missing --cov-fail-under=90"
 
 [tool.ruff]
 line-length = 100

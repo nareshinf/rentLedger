@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "kb": {
+      "command": ".venv/bin/python",
+      "args": ["kb/server.py"],
+      "env": {
+        "HF_HUB_OFFLINE": "1"
+      }
+    }
+  }
+}

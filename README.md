@@ -65,6 +65,28 @@ The database defaults to `./rentledger.db`. There are no migrations yet. When th
 
 Interactive docs are served at `/docs` while the service is running.
 
+## Knowledge base
+
+A local semantic index of `docs/**/*.md` and `app/**/*.py`. Claude Code can query it through the `search_kb` MCP tool.
+
+```bash
+pip install -e ".[kb]"   # adds sentence-transformers (and torch); needed once
+python kb/index.py       # build or refresh .kb/ (re-run after changing docs or code)
+```
+
+- **Indexing:**
+  - The first run downloads the `all-MiniLM-L6-v2` embedding model, about 90 MB. Later runs reuse the cached copy.
+  - Re-running is idempotent: changed sections are updated, and chunks from deleted files are removed.
+  - `.kb/` is git-ignored.
+- **Search:**
+  - `.mcp.json` registers the `kb` server, so Claude Code in this repo gets `search_kb(query, k=5, kind=None)`.
+  - `kind` is `doc`, `design` or `code`.
+  - It runs offline (`HF_HUB_OFFLINE=1`) using the cached model.
+- **Tests:**
+  - Tests and CI use a deterministic stand-in embedder (`RENTLEDGER_KB_EMBEDDER=hashing`), so they need no model and no network.
+  - The real-model relevance check is marked `kb_model`. It runs only when `[kb]` is installed and the model is cached, and is skipped otherwise:
+    `HF_HUB_OFFLINE=1 pytest -m kb_model`.
+
 ## Test
 
 ```bash

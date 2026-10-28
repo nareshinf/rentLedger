@@ -18,6 +18,9 @@ def pytest_configure(config):
         "markers", "jira(key): Jira issue whose acceptance criteria the test covers"
     )
     config.addinivalue_line("markers", "self_run: runs the test suite in a subprocess")
+    config.addinivalue_line(
+        "markers", "kb_model: needs sentence-transformers and the cached embedding model"
+    )
 
 
 def pytest_collection_modifyitems(config, items):
