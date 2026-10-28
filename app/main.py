@@ -12,7 +12,7 @@ from app.errors import (
     rule_violation_handler,
     validation_exception_handler,
 )
-from app.routers import health, leases, properties, tenants
+from app.routers import health, leases, payments, properties, tenants
 from app.services.errors import (
     ConflictError,
     NotFoundError,
@@ -40,6 +40,7 @@ def create_app(database_url: str | None = None) -> FastAPI:
     app.include_router(properties.router)
     app.include_router(tenants.router)
     app.include_router(leases.router)
+    app.include_router(payments.router)
     return app
 
 

@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 
 import pytest
@@ -64,3 +65,15 @@ def db_session():
     finally:
         session.close()
         engine.dispose()
+
+
+FIXED_TODAY = date(2026, 4, 15)
+
+
+@pytest.fixture
+def fixed_today(app):
+    from app.services.clock import FixedClock, get_clock
+
+    app.dependency_overrides[get_clock] = lambda: FixedClock(FIXED_TODAY)
+    yield FIXED_TODAY
+    app.dependency_overrides.pop(get_clock, None)
