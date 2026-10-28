@@ -48,3 +48,16 @@ class Lease(Base):
     due_day: Mapped[int]
     status: Mapped[str] = mapped_column(String(10), default="active")
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+    __table_args__ = (CheckConstraint("amount > 0", name="ck_payments_amount_positive"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lease_id: Mapped[int] = mapped_column(ForeignKey("leases.id", ondelete="RESTRICT"), index=True)
+    amount: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    paid_on: Mapped[date]
+    method: Mapped[str | None] = mapped_column(String(50))
+    note: Mapped[str | None] = mapped_column(String(500))
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())

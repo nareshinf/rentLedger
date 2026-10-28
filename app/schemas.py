@@ -19,6 +19,12 @@ Phone = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, ma
 Money = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=2)]
 DueDay = Annotated[int, Field(ge=1, le=28)]
 LeaseStatus = Literal["active", "ended"]
+Method = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+Note = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+
+
+def money_str(value: Decimal) -> str:
+    return f"{value:.2f}"
 
 
 def _reject_null(value):
@@ -116,4 +122,42 @@ class LeaseRead(BaseModel):
 
     @field_serializer("monthly_rent")
     def _money(self, value: Decimal) -> str:
-        return f"{value:.2f}"
+        return money_str(value)
+
+
+class PaymentCreate(BaseModel):
+    amount: Money
+    paid_on: date
+    method: Method | None = None
+    note: Note | None = None
+
+
+class PaymentRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    lease_id: int
+    amount: Decimal
+    paid_on: date
+    method: str | None
+    note: str | None
+
+    @field_serializer("amount")
+    def _money(self, value: Decimal) -> str:
+        return money_str(value)
+
+
+class BalanceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    lease_id: int
+    as_of: date
+    monthly_rent: Decimal
+    charges_due: int
+    charged: Decimal
+    paid: Decimal
+    balance: Decimal
+
+    @field_serializer("monthly_rent", "charged", "paid", "balance")
+    def _money(self, value: Decimal) -> str:
+        return money_str(value)

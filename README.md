@@ -43,6 +43,9 @@ The database defaults to `./rentledger.db`. There are no migrations yet. When th
 | GET | `/leases?tenantId=&propertyId=` | 200 list, filters optional and combined | 400 (non-integer filter) |
 | GET | `/leases/{id}` | 200 | 404 |
 | POST | `/leases/{id}/end` with `{"end_date": "YYYY-MM-DD"}` | 200, `status: "ended"` | 400, 404, 409 (already ended) |
+| POST | `/leases/{id}/payments` | 201 with the payment | 400, 404 |
+| GET | `/leases/{id}/payments` | 200 list, ordered by `paid_on` | 404 |
+| GET | `/leases/{id}/balance?asOf=YYYY-MM-DD` | 200 balance (`asOf` defaults to today) | 400 (bad date), 404 |
 
 - Property fields are `name` and `address`.
 - Tenant fields are `full_name`, `email` and an optional `phone`. Emails are validated and stored in lower case.
@@ -52,6 +55,13 @@ The database defaults to `./rentledger.db`. There are no migrations yet. When th
   - Rent falls due on `due_day` each month, from the first due day on or after the start date up to and including the end date.
 - Two leases on the same property can't overlap. This applies to ended leases too, for the dates they covered.
 - `POST /leases/{id}/end` can only keep or bring forward an existing end date.
+- A payment has `amount` (above 0, at most 2 decimal places), `paid_on` (not in the future), and an optional `method` and `note`.
+  - Ended leases still accept payments.
+- The balance is calculated as follows, with every amount an exact decimal returned as a string:
+  - `charges_due` is the number of due dates on or before `asOf`.
+  - `charged` = `charges_due` × `monthly_rent`.
+  - `paid` is the total of payments made on or before `asOf`.
+  - `balance` = `charged` − `paid`. A negative balance is a credit.
 
 Interactive docs are served at `/docs` while the service is running.
 
