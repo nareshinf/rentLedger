@@ -48,3 +48,19 @@ def app(tmp_path):
 def client(app):
     with TestClient(app) as c:
         yield c
+
+
+@pytest.fixture
+def db_session():
+    from sqlalchemy.pool import StaticPool
+
+    from app.db import create_tables, make_engine, make_session_factory
+
+    engine = make_engine("sqlite://", poolclass=StaticPool)
+    create_tables(engine)
+    session = make_session_factory(engine)()
+    try:
+        yield session
+    finally:
+        session.close()
+        engine.dispose()
