@@ -31,7 +31,7 @@ class Lease(Base):
         CheckConstraint("monthly_rent > 0", name="ck_leases_rent_positive"),
         CheckConstraint("end_date IS NULL OR end_date >= start_date", name="ck_leases_dates"),
     )
-    id, tenant_id, property_id                      # unchanged from REN-3
+    id, tenant_id, property_id  # unchanged from REN-3
     start_date: Mapped[date]
     end_date: Mapped[date | None]
     monthly_rent: Mapped[Decimal] = mapped_column(Numeric(12, 2))
