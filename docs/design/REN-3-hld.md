@@ -79,11 +79,11 @@ models.py  (SQLAlchemy)  ◀── schemas.py (Pydantic: Create / Update / Read 
   Pydantic `EmailStr` and stored lower-cased. `phone` is optional, free text, max 50 characters.
 - **Path ids** that aren't integers → 400 (through the REN-2 handler). Integer ids that don't exist → 404.
 
-### 4.4 Delete protection (AC7): needs a decision
+### 4.4 Delete protection (AC7): **decided: option 1**
 
-AC7 depends on **leases, which REN-4 introduces**. Options:
+AC7 depends on **leases, which REN-4 introduces**. Options considered:
 
-1. **(Recommended)** REN-3 adds a **minimal `leases` table**: `id`, `tenant_id` FK, `property_id` FK, both
+1. **(Chosen)** REN-3 adds a **minimal `leases` table**: `id`, `tenant_id` FK, `property_id` FK, both
    `ON DELETE RESTRICT`, and no API. The tenant and property delete services check for referencing
    leases and raise `ConflictError` → 409. The FK is a second safety net. REN-4 adds the
    remaining lease columns, rules and endpoints. AC7 is fully tested in REN-3 by inserting a lease
@@ -112,8 +112,8 @@ Every test is marked `@pytest.mark.jira("REN-3")` and named `test_acN_...`.
 
 ## 7. Risks and open points
 
-- **AC7 approach:** please approve option 1 or 2 in §4.4.
-- **Email uniqueness:** the ACs don't ask for it, so it isn't enforced. Two tenants can share an email. Please say if you want 409 on a duplicate email.
+- **AC7 approach:** decided, option 1 (minimal `leases` table in REN-3).
+- **Email uniqueness:** decided, **not enforced**. Two tenants may share an email.
 - **No migrations:** `create_all` doesn't change tables that already exist. REN-4 adding lease columns means
   deleting any local `rentledger.db`. If you want Alembic, it should be its own issue.
 - **Stacked branch:** REN-3's PR will target `main` after PR #1 merges (or `REN-2-skeleton` until then).
