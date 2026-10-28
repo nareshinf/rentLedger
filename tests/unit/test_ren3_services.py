@@ -1,3 +1,6 @@
+from datetime import date
+from decimal import Decimal
+
 import pytest
 from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
@@ -21,7 +24,15 @@ def _tenant(session, full_name="Ann Lee", email="ann@example.com", phone=None):
 
 
 def _lease(session, tenant, prop):
-    session.add(Lease(tenant_id=tenant.id, property_id=prop.id))
+    session.add(
+        Lease(
+            tenant_id=tenant.id,
+            property_id=prop.id,
+            start_date=date(2026, 1, 1),
+            monthly_rent=Decimal("1000.00"),
+            due_day=1,
+        )
+    )
     session.commit()
 
 

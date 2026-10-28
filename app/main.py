@@ -5,9 +5,20 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 
 from app.db import create_tables, get_database_url, make_engine, make_session_factory
-from app.errors import conflict_handler, not_found_handler, validation_exception_handler
-from app.routers import health, properties, tenants
-from app.services.errors import ConflictError, NotFoundError
+from app.errors import (
+    conflict_handler,
+    not_found_handler,
+    reference_not_found_handler,
+    rule_violation_handler,
+    validation_exception_handler,
+)
+from app.routers import health, leases, properties, tenants
+from app.services.errors import (
+    ConflictError,
+    NotFoundError,
+    ReferenceNotFoundError,
+    RuleViolationError,
+)
 
 
 @asynccontextmanager
@@ -23,9 +34,12 @@ def create_app(database_url: str | None = None) -> FastAPI:
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(NotFoundError, not_found_handler)
     app.add_exception_handler(ConflictError, conflict_handler)
+    app.add_exception_handler(ReferenceNotFoundError, reference_not_found_handler)
+    app.add_exception_handler(RuleViolationError, rule_violation_handler)
     app.include_router(health.router)
     app.include_router(properties.router)
     app.include_router(tenants.router)
+    app.include_router(leases.router)
     return app
 
 

@@ -1,6 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 
-from sqlalchemy import ForeignKey, String, func
+from sqlalchemy import CheckConstraint, ForeignKey, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -26,9 +27,13 @@ class Tenant(Base):
 
 
 class Lease(Base):
-    """Minimal lease: only the references needed for delete protection. REN-4 extends it."""
-
     __tablename__ = "leases"
+    __table_args__ = (
+        CheckConstraint("due_day BETWEEN 1 AND 28", name="ck_leases_due_day"),
+        CheckConstraint("status IN ('active', 'ended')", name="ck_leases_status"),
+        CheckConstraint("monthly_rent > 0", name="ck_leases_rent_positive"),
+        CheckConstraint("end_date IS NULL OR end_date >= start_date", name="ck_leases_dates"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     tenant_id: Mapped[int] = mapped_column(
@@ -37,3 +42,9 @@ class Lease(Base):
     property_id: Mapped[int] = mapped_column(
         ForeignKey("properties.id", ondelete="RESTRICT"), index=True
     )
+    start_date: Mapped[date]
+    end_date: Mapped[date | None]
+    monthly_rent: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    due_day: Mapped[int]
+    status: Mapped[str] = mapped_column(String(10), default="active")
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())

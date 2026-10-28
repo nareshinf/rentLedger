@@ -5,3 +5,15 @@ class NotFoundError(Exception):
 
 class ConflictError(Exception):
     pass
+
+
+class ReferenceNotFoundError(Exception):
+    def __init__(self, missing: dict[str, str]):
+        super().__init__("Referenced record not found")
+        self.missing = missing
+
+
+class RuleViolationError(Exception):
+    def __init__(self, field: str, message: str):
+        super().__init__(message)
+        self.field = field
