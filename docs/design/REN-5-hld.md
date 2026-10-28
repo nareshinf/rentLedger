@@ -90,12 +90,12 @@ balance  = charged − paid        (negative = credit, AC6)
 ### 4.4 Recording a payment
 
 The schema validates `amount` as `Money` (> 0, at most 2 decimal places), `paid_on` as a required date, and `method` /
-`note` as optional, trimmed, non-empty strings. The service checks the lease exists (404), then applies
-P1 and P2.
+`note` as optional, trimmed, non-empty strings. The service checks the lease exists (404). Per P1, ended leases accept payments. Per P2, a
+`paid_on` later than `Clock.today()` → 400 on `paid_on`.
 
-## 5. Decisions needed
+## 5. Decisions (recommendations accepted in review)
 
-| # | Question | Recommendation |
+| # | Question | **Decision** |
 |---|----------|----------------|
 | **P1** | AC1 says "an active lease". Can payments be recorded on an **ended** lease? | **Yes.** Tenants often pay arrears after moving out, and the balance should still go to zero. Payments are only refused for unknown leases (404). |
 | **P2** | Can a payment be dated **in the future**? | **No → 400** (`paid_on` after today from the `Clock`). A future-dated payment is almost always a typo, and it would silently skew today's balance. |
