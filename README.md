@@ -29,6 +29,23 @@ curl http://127.0.0.1:8000/health
 
 The database defaults to `./rentledger.db`. To use a different database, set `RENTLEDGER_DATABASE_URL`, for example `sqlite:////tmp/rentledger.db`.
 
+## API
+
+| Method | Path | Success | Errors |
+|--------|------|---------|--------|
+| GET | `/health` | 200 `{"status": "ok"}` | |
+| POST | `/properties`, `/tenants` | 201 with the new record, including `id` | 400 |
+| GET | `/properties`, `/tenants` | 200 list, ordered by `id` | |
+| GET | `/properties/{id}`, `/tenants/{id}` | 200 | 400 (non-integer id), 404 |
+| PATCH | `/properties/{id}`, `/tenants/{id}` | 200 (partial update) | 400, 404 |
+| DELETE | `/properties/{id}`, `/tenants/{id}` | 204, no body | 404, 409 if a lease references the record |
+
+- Property fields are `name` and `address`.
+- Tenant fields are `full_name`, `email` and an optional `phone`. Emails are validated and stored in lower case.
+- A validation error returns 400 with an `errors` list, and each entry names its `field`.
+
+Interactive docs are served at `/docs` while the service is running.
+
 ## Test
 
 ```bash
