@@ -87,14 +87,14 @@ Two leases on the same property overlap when `a.start ≤ b.end` and `b.start �
 **inclusive**, with a null end treated as open-ended. So a lease ending 2026-06-30 and one starting
 2026-07-01 don't overlap, but one starting 2026-06-30 does.
 
-Which existing leases count is **decision D1** (§6).
+Per **D1**, every existing lease on the property counts, active or ended, judged by its date range.
 
 ### 4.5 Ending a lease (AC6)
 
 `POST /leases/{id}/end` sets `end_date` to the given date and `status` to `ended` in one transaction.
 - `end_date < start_date` → 400.
 - Lease already `ended` → 409.
-- Whether the new end can be *later* than an existing `end_date` is **decision D2**.
+- Per **D2**, the new end date must be on or before an existing `end_date`, otherwise 400.
 - The end date can be in the future (for example a notice period). The status becomes `ended` straight away,
   and rent still accrues on due dates up to and including the end date.
 
@@ -115,9 +115,9 @@ AC6 is then tested by checking that `due_dates` returns nothing after the end da
 The README will say so. CI and the tests always start from an empty database. This is the
 no-migrations risk recorded in the REN-3 HLD.
 
-## 6. Decisions needed
+## 6. Decisions (recommendations accepted in review)
 
-| # | Question | Recommendation |
+| # | Question | **Decision** |
 |---|----------|----------------|
 | **D1** | Does the overlap check (AC4) consider only `active` leases, as the AC says, or **all** leases? | **All leases, by their date ranges.** An ended lease's range stops at its end date, so ending a lease early still frees the property after that date. Ignoring ended leases completely would let two leases charge rent for the same period on one property. |
 | **D2** | Can `/end` move an existing end date *later*? | **No: only the same date or earlier** (otherwise 400). Extending a lease would need its own overlap re-check, so it's better as a separate story. |
@@ -141,4 +141,4 @@ Every test is marked `@pytest.mark.jira("REN-4")` and named `test_acN_...`.
 ## 8. Risks
 
 - **Local DB has to be recreated** (§5).
-- **D1–D4** change behaviour and tests, so please confirm them before the LLD.
+- D1–D4 were decided in HLD review: all recommendations accepted.
