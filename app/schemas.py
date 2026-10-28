@@ -1,10 +1,24 @@
+from datetime import date
+from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, StringConstraints, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    EmailStr,
+    Field,
+    StringConstraints,
+    ValidationInfo,
+    field_serializer,
+    field_validator,
+)
 
 Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 Address = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
 Phone = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=50)]
+Money = Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=2)]
+DueDay = Annotated[int, Field(ge=1, le=28)]
+LeaseStatus = Literal["active", "ended"]
 
 
 def _reject_null(value):
@@ -65,3 +79,41 @@ class TenantRead(BaseModel):
     full_name: str
     email: str
     phone: str | None
+
+
+class LeaseCreate(BaseModel):
+    tenant_id: int
+    property_id: int
+    start_date: date
+    end_date: date | None = None
+    monthly_rent: Money
+    due_day: DueDay
+
+    @field_validator("end_date")
+    @classmethod
+    def _end_not_before_start(cls, end_date: date | None, info: ValidationInfo) -> date | None:
+        start_date = info.data.get("start_date")
+        if end_date is not None and start_date is not None and end_date < start_date:
+            raise ValueError("end_date must be on or after start_date")
+        return end_date
+
+
+class LeaseEnd(BaseModel):
+    end_date: date
+
+
+class LeaseRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    tenant_id: int
+    property_id: int
+    start_date: date
+    end_date: date | None
+    monthly_rent: Decimal
+    due_day: int
+    status: LeaseStatus
+
+    @field_serializer("monthly_rent")
+    def _money(self, value: Decimal) -> str:
+        return f"{value:.2f}"

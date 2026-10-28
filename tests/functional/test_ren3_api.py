@@ -1,3 +1,6 @@
+from datetime import date
+from decimal import Decimal
+
 import pytest
 
 from app.models import Lease
@@ -16,7 +19,15 @@ def _create(client, path, payload):
 
 def _add_lease(app, tenant_id, property_id):
     with app.state.session_factory() as session:
-        session.add(Lease(tenant_id=tenant_id, property_id=property_id))
+        session.add(
+            Lease(
+                tenant_id=tenant_id,
+                property_id=property_id,
+                start_date=date(2026, 1, 1),
+                monthly_rent=Decimal("1000.00"),
+                due_day=1,
+            )
+        )
         session.commit()
 
 

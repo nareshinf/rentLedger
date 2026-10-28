@@ -5,7 +5,12 @@ from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.services.errors import ConflictError, NotFoundError
+from app.services.errors import (
+    ConflictError,
+    NotFoundError,
+    ReferenceNotFoundError,
+    RuleViolationError,
+)
 
 _LOCATIONS = {"body", "query", "path", "header", "cookie"}
 
@@ -35,3 +40,20 @@ async def not_found_handler(request: Request, exc: NotFoundError) -> JSONRespons
 
 async def conflict_handler(request: Request, exc: ConflictError) -> JSONResponse:
     return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
+async def reference_not_found_handler(
+    request: Request, exc: ReferenceNotFoundError
+) -> JSONResponse:
+    errors = [{"field": field, "message": message} for field, message in exc.missing.items()]
+    return JSONResponse(status_code=422, content={"detail": str(exc), "errors": errors})
+
+
+async def rule_violation_handler(request: Request, exc: RuleViolationError) -> JSONResponse:
+    return JSONResponse(
+        status_code=400,
+        content={
+            "detail": "Validation failed",
+            "errors": [{"field": exc.field, "message": str(exc)}],
+        },
+    )
