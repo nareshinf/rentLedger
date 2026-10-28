@@ -55,7 +55,8 @@ kb/server.py     MCP stdio server (FastMCP) with one tool, search_kb
 - **Python:** `ast` walks the module and makes one chunk per **top-level** `def`, `async def` and `class`. A class
   chunk includes its methods. `title` = the symbol name (`compute_balance`, `LeaseCreate`), and the text is the exact source
   segment, including decorators and docstring.
-  - Module-level code (imports, constants, type aliases such as `Money`) is decision **K3**.
+  - Per **K3**, each file also gets one `<module>` chunk holding the module docstring and top-level statements other than
+    imports, such as constants and type aliases like `Money`.
 - **Kind:** `docs/design/**` → `design`; other `docs/**` → `doc`; `app/**` → `code`.
 
 ### 4.3 Store and idempotency (AC1, AC3)
@@ -114,9 +115,9 @@ Every test is marked `@pytest.mark.jira("REN-6")`.
 
 A dry run resolved all of them on Python 3.12: chromadb 1.5.9, mcp 2.3.0 and sentence-transformers 6.2.0, adding 87 packages including torch.
 
-## 7. Decisions needed
+## 7. Decisions (recommendations accepted in review)
 
-| # | Question | Recommendation |
+| # | Question | **Decision** |
 |---|----------|----------------|
 | **K1** | How can AC5 be tested without breaking "no real network in tests"? The real model must be downloaded once. | **Two tiers.** CI and default `pytest` use a deterministic `HashingEmbedder` (no network, no torch) for all AC1–AC4/AC6 tests. AC5 is a test marked `kb_model` that uses the real model **only if it's already cached locally** (`HF_HUB_OFFLINE=1`), and is otherwise skipped with a clear reason. I run it locally and post the evidence. Faking AC5 with a toy embedder would prove nothing about relevance. |
 | **K2** | Dependency weight: torch is very large, so it would slow every CI run. | **Split extras.** `[dev]` gains `chromadb` and `mcp`, which CI needs for the KB tests. A new `[kb]` extra holds `sentence-transformers`, installed only by people who build a real index. CI never installs torch. The real embedder imports it lazily, and those few lines are covered by the `kb_model` test (excluded from the CI coverage run with a narrow `pragma: no cover` if needed). |
